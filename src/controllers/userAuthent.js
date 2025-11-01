@@ -3,6 +3,7 @@ const redisClient = require('../config/redis');
 const validate = require('../utils/validator');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const submission = require('../models/submission');
 
 const register = async(req,res) =>{
     try{
@@ -78,20 +79,19 @@ const logout = async (req,res) =>{
 const adminRegister = async(req,res) =>{
         try{
         // validate the data
-        // if(req.result.role != 'admin'){
-            // throw new Error("Invalid Credentials");
-        // }
+        // if(req.result.role != 'admin')
+        //     throw new Error("Invalid Credentials");
+        
         validate(req.body);
 
         const {firstName, emailId, password} = req.body;
 
         req.body.password = await bcrypt.hash(password,10);
-        req.body.role = 'admin';
         
         // 
 
         const user = await User.create(req.body);
-        const token = jwt.sign({_id:user._id , emailId:emailId, role:'user'},process.env.JWT_KEY,{expiresIn:60*60});
+        const token = jwt.sign({_id:user._id , emailId:emailId, role:user.role},process.env.JWT_KEY,{expiresIn:60*60});
         res.cookie('token',token,{maxAge: 60*60*1000});
         res.status(201).send("User Registered Successfully")
 
@@ -101,4 +101,24 @@ const adminRegister = async(req,res) =>{
     }
 }
 
-module.exports = {register, login, logout, adminRegister};
+const deleteProfile = async(req,res) =>{
+    try{
+        const userId = req.result._id;
+
+        // userschema delte
+        await User.findByIdAndDelete(userId);
+
+        // submission se bhi delete krna hai
+        // await submission.deleteMany({userId: userId});
+        
+        res.status(200).send("Deleted Successfully");
+
+    }
+    catch(err){
+
+        res.status(500).send("Internal Server Error");
+
+    }
+}
+
+module.exports = {register, login, logout, adminRegister, deleteProfile};

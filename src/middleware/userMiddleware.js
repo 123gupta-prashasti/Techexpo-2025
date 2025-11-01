@@ -19,7 +19,7 @@ const userMiddleware = async(req, res, next) => {
 
 
         if(!result ){
-            throw new Error("User doesn't exist");
+            throw new Error("User Doesn't exist");
         }
 
         // reddis k blocklist me toh present nhi hai
